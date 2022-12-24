@@ -13,13 +13,18 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 BaseModelForm = model_form_factory(FlaskForm)
+
 
 class ModelForm(BaseModelForm):
     @classmethod
     def get_session(self):
         return db.session
+
 
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -245,14 +250,11 @@ def search_api():
     except ValueError:
         abort(400)
     
-    print(mz_min, mz_max, "  ", rt_min, rt_max)
-    
     mz_filter = and_(mz_max > Chemical.final_mz, Chemical.final_mz > mz_min)
     rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
     result = Chemical.query.filter(
                or_(mz_filter, rt_filter) 
             ).limit(20).all()
-    print("Got Result", result)
     data = []
     for x in result:
         data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
@@ -265,7 +267,4 @@ def search():
 
 
 if __name__ == "__main__":
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
