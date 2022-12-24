@@ -40,7 +40,19 @@ class Admin(db.Model):
         if not session.get('admin'):
             return redirect(url_for("admin_login"))
 
+
+class Chemical(db.Model):
+    query: db.Query
+    id = db.Column(db.Integer, primary_key=True)
+    pubchem_cid = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String, nullable=False)
+    formula = db.Column(db.String, nullable=False)
+    mass = db.Column(db.Float, nullable=False)
+    mz = db.Column(db.Float, nullable=False)
+    rt = db.Column(db.Float, nullable=False)
+
 # Error Handlers
+
 
 @app.errorhandler(404)
 def handler_404(msg):
