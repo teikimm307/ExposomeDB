@@ -1,50 +1,85 @@
 {% extends "base.html" %}
-{% block content %}  
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
     <script type="module">
-        import { createApp } from 'https://unpkg.com/petite-vue?module'
+        //import { createApp } from 'https://unpkg.com/petite-vue?module'
+        //import { createApp } from 'https://unpkg.com/vue@2.7.14/dist/vue.esm-browser.prod.js'
 
-        createApp({
-            mz_min:0,
-            mz_max:0,
-            rt_min:0,
-            rt_max:0,
-            results: [],
-            error: null,
-            // methods
-            async fetch_data() {
-                try {
-                    console.log("called...")
-                    const json = (await fetch(`/chemical/search?mz_min=${mz_min.value}&mz_max=${mz_max.value}&rt_min=${rt_min.value}&rt_max=${rt_max.value}`))
-                    this.results = await json.json();
-                } catch(e) {
-                    console.error(e);
-                    error = true;
+        function valid(str) {
+            return !isNaN(str) && !isNaN(parseFloat(str))
+        }
+
+        function debounce(func, timeout = 300){
+          let timer;
+          return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+          };
+        }
+
+
+        const app = new Vue({
+            el: "#search",
+            data() {
+                return {
+                    mz_min: 0,
+                    mz_max: 0,
+                    rt_min: 0,
+                    rt_max: 0,
+                    results: [],
+                    error: null,
                 }
+            },
+            methods: {
+                // methods
+                async fetch_data() {
+                    if (!(valid(this.mz_min) && valid(this.mz_max) && valid(this.rt_max) && valid(this.rt_min))) {
+                        return
+                    }
+                    const url = `/chemical/search?mz_min=${this.mz_min}&mz_max=${this.mz_max}&rt_min=${this.rt_min}&rt_max=${this.rt_max}`
+                    fetch(url).then(res => {
+                        if (res.status !== 200) {
+                            console.log(`Error Status, ${res.status}`)
+                        }
+                        return res.json()
+                    }).then(json => {
+                        this.results = json;
+                        this.error = null;
+                    }).catch(e => {
+                        console.error(e);
+                        this.error = true;
+                    })
+                },
+                //debounced_fetch: debounce(this.fetch_data.bind(this), 300)
+            },
+            created() {
+                this.fetch_data = debounce(this.fetch_data, 300)
             }
-        }).mount()
-    </script>  
+
+        });
+    </script>
 
     <h1>Search Box</h1>
+    <div id="search">
     <main>
         <label for="mz_min">Mz Min</label>
-        <input id="mz_min" type="number" name="mz_min" v-model="mz_min">
-
+        <input id="mz_min" type="number" name="mz_min" v-model="mz_min" @input="fetch_data()" value="0">
         <label for="mz_min">Mz Max</label>
-        <input id="mz_max" type="number" name="mz_max" v-model="mz_max">
-
+        <input id="mz_max" type="number" name="mz_max" v-model="mz_max" @input="fetch_data()" value="0">
         <label for="mz_min">RT Min</label>
-        <input id="rt_min" type="number" name="rt_min" v-model="rt_min">
-
+        <input id="rt_min" type="number" name="rt_min" v-model="rt_min" @input="fetch_data()" value="0">
         <label for="mz_min">RT Max</label>
-        <input id="rt_max" type="number" name="rt_max" v-model="rt_max">
+        <input id="rt_max" type="number" name="rt_max" v-model="rt_max" @input="fetch_data()" value="0">
 
+        <!--
         <br>
         <button @click="fetch_data()">Search</button>
+        -->
     </main>
     <hr>
     {% raw %}
     <div id="search">
-        <div v-if="error" style="background-color: red;">
+        <div v-if="error" style="color: red;">
             Uh Oh! There is an Error!
         </div>
         <div v-for="result in results">
@@ -65,5 +100,6 @@
         </div>
     </div>
     {% endraw %}
+    </div>
 
 {% endblock %}

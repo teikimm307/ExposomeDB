@@ -50,9 +50,11 @@ class Admin(db.Model):
         if not session.get('admin'):
             return redirect(url_for("admin_login"))
 
+
 def object_as_dict(obj):
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
+
 
 class Chemical(db.Model):
     query: db.Query
@@ -86,7 +88,6 @@ class ChemicalForm(ModelForm):
     class Meta:
         csrf = False
         model = Chemical
-        #exclude = ['id']
 
 # Error Handlers
 
@@ -155,6 +156,7 @@ def home():
 
 # Routes for CRUD operations on chemicals
 
+
 @app.route("/chemical/create", methods=['GET', 'POST'])
 def chemical_create():
     if not session.get('admin'):
@@ -165,16 +167,16 @@ def chemical_create():
             new_chemical = Chemical(**form.data)
             db.session.add(new_chemical)
             db.session.commit()
-            return render_template("create_chemical.html", form=form, success=True)
+            return render_template("create_chemical.html", form=ChemicalForm(), success=True)
         else:
-            return render_template("create_chemical.html", form=ChemicalForm(), invalid=True)
+            return render_template("create_chemical.html", form=form, invalid=True)
     else:
         form = ChemicalForm()
         return render_template("create_chemical.html", form=form)
 
 
 @app.route("/chemical/<int:id>/update", methods=['GET', 'POST'])
-def chemical_update(id:int):
+def chemical_update(id: int):
     if not session.get('admin'):
         abort(403)
     current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
@@ -194,8 +196,9 @@ def chemical_update(id:int):
         form = ChemicalForm(**dct)
         return render_template("create_chemical.html", form=form, id=id)
 
+
 @app.route("/chemical/<int:id>/delete")
-def chemical_delete(id:int):
+def chemical_delete(id: int):
     if not session.get('admin'):
         abort(403)
     current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
@@ -205,7 +208,7 @@ def chemical_delete(id:int):
 
 
 @app.route("/chemical/<int:id>/view")
-def chemical_view(id:int):
+def chemical_view(id: int):
     current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
     dct = object_as_dict(current_chemical)
     return render_template("view_chemical.html", id=id, chemical=dct)
@@ -221,6 +224,7 @@ def chemical_all():
         data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
     return jsonify(data)
 
+
 @app.route("/chemical/search")
 def search_api():
     mz_min, mz_max = request.args.get('mz_min'), request.args.get('mz_max')
@@ -235,7 +239,7 @@ def search_api():
         if rt_min is not None and rt_max is None:
             rt_max = float(rt_min) + 3
         elif rt_max is not None and rt_min is None:
-            rt_min = rt_max - 3
+            rt_min = float(rt_max) - 3
         mz_min, mz_max = float(mz_min), float(mz_max)
         rt_min, rt_max = float(rt_min), float(rt_max)
     except ValueError:
@@ -258,6 +262,7 @@ def search_api():
 @app.route("/search")
 def search():
     return render_template("search.html")
+
 
 if __name__ == "__main__":
     db.init_app(app)
