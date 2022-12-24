@@ -14,8 +14,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
 
 BaseModelForm = model_form_factory(FlaskForm)
 
@@ -267,4 +266,6 @@ def search():
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

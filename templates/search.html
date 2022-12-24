@@ -49,8 +49,7 @@
                         console.error(e);
                         this.error = true;
                     })
-                },
-                //debounced_fetch: debounce(this.fetch_data.bind(this), 300)
+                }
             },
             created() {
                 this.fetch_data = debounce(this.fetch_data, 300)

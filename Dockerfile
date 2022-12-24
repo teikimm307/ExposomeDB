@@ -14,4 +14,4 @@ RUN poetry install --no-dev
 # now copy over everything
 COPY . /app/
 
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+ENTRYPOINT ["/app/entrypoint.sh"]
