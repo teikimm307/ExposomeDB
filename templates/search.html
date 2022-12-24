@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}  
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/petite-vue?module'
+
+        createApp({
+            mz_min:0,
+            mz_max:0,
+            rt_min:0,
+            rt_max:0,
+            results: [],
+            error: null,
+            // methods
+            async fetch_data() {
+                try {
+                    console.log("called...")
+                    const json = (await fetch(`/chemical/search?mz_min=${mz_min.value}&mz_max=${mz_max.value}&rt_min=${rt_min.value}&rt_max=${rt_max.value}`))
+                    this.results = await json.json();
+                } catch(e) {
+                    console.error(e);
+                    error = true;
+                }
+            }
+        }).mount()
+    </script>  
+
+    <h1>Search Box</h1>
+    <main>
+        <label for="mz_min">Mz Min</label>
+        <input id="mz_min" type="number" name="mz_min" v-model="mz_min">
+
+        <label for="mz_min">Mz Max</label>
+        <input id="mz_max" type="number" name="mz_max" v-model="mz_max">
+
+        <label for="mz_min">RT Min</label>
+        <input id="rt_min" type="number" name="rt_min" v-model="rt_min">
+
+        <label for="mz_min">RT Max</label>
+        <input id="rt_max" type="number" name="rt_max" v-model="rt_max">
+
+        <br>
+        <button @click="fetch_data()">Search</button>
+    </main>
+    <hr>
+    {% raw %}
+    <div id="search">
+        <div v-if="error" style="background-color: red;">
+            Uh Oh! There is an Error!
+        </div>
+        <div v-for="result in results">
+            <a :href="result.url">
+                <h3>{{result.name}}</h3>
+            </a>
+            <table>
+                <tr>
+                    <td>Rt</td>
+                    <td>{{result.rt}}</td>
+                </tr>
+                <tr>
+                    <td>Mz</td>
+                    <td>{{result.mz}}</td>
+                </tr>
+            </table>
+            <hr>
+        </div>
+    </div>
+    {% endraw %}
+
+{% endblock %}

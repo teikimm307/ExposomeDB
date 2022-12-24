@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Viewing Chemical {{id}}</h2>
+{% if session.admin %}
+<div>
+<a href="{{ url_for('chemical_update', id=id) }}">
+    <button>Edit Chemical</button>
+</a>
+<a href="{{ url_for('chemical_delete', id=id) }}">
+    <button style="background-color: red;">Delete Chemical</button>
+</a>
+</div>
+{% endif %}
+<table>
+    {% for k,v in chemical.items() %}
+    <tr>
+        <td>
+            <strong>{{k}}</strong>
+        </td>
+        <td>
+            {% if v is not none %}
+            {{ v }}
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

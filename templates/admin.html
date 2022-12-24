@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Admin Dashboard</h1>
-    <p>You are {{user}}</p>
+    <article>
+        <p>You are {{user}}</p>
+        <a href="{{url_for('chemical_create')}}">
+            <button>
+                Add a Chemical
+            </button></a>
+    </article>
 {% endblock %}

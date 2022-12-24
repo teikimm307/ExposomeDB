@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-from flask import Flask, render_template, session, request, abort, redirect, url_for
+from flask import Flask, render_template, session, request, abort, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, or_, and_
+from flask_wtf import FlaskForm
 import bcrypt
+from wtforms_alchemy import model_form_factory
 
 db: SQLAlchemy = SQLAlchemy()
 app = Flask(__name__)
@@ -10,6 +13,13 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
+
+BaseModelForm = model_form_factory(FlaskForm)
+
+class ModelForm(BaseModelForm):
+    @classmethod
+    def get_session(self):
+        return db.session
 
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -40,16 +50,43 @@ class Admin(db.Model):
         if not session.get('admin'):
             return redirect(url_for("admin_login"))
 
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs}
 
 class Chemical(db.Model):
     query: db.Query
     id = db.Column(db.Integer, primary_key=True)
-    pubchem_cid = db.Column(db.Integer, nullable=False)
+    # all fields after here are included in the database
+    chemical_db_id = db.Column(db.String)
+    library = db.Column(db.String)
+    # important fields
     name = db.Column(db.String, nullable=False)
     formula = db.Column(db.String, nullable=False)
     mass = db.Column(db.Float, nullable=False)
-    mz = db.Column(db.Float, nullable=False)
-    rt = db.Column(db.Float, nullable=False)
+    
+    pubchem_cid = db.Column(db.Integer)
+    pubmed_refcount = db.Column(db.Integer)
+    standard_class = db.Column(db.String)
+    inchikey = db.Column(db.String)
+    inchikey14 = db.Column(db.String)
+
+    final_mz = db.Column(db.Float, nullable=False)
+    final_rt = db.Column(db.Float, nullable=False)
+
+    final_adduct = db.Column(db.String)
+    adduct = db.Column(db.String)
+    detected_adducts = db.Column(db.String)
+    adduct_calc_mz = db.Column(db.String)
+    msms_detected = db.Column(db.Boolean)
+    msms_purity = db.Column(db.Float)
+
+
+class ChemicalForm(ModelForm):
+    class Meta:
+        csrf = False
+        model = Chemical
+        #exclude = ['id']
 
 # Error Handlers
 
@@ -116,11 +153,111 @@ def home():
     else:
         return redirect(url_for("admin_create"))
 
+# Routes for CRUD operations on chemicals
+
+@app.route("/chemical/create", methods=['GET', 'POST'])
+def chemical_create():
+    if not session.get('admin'):
+        abort(403)
+    if request.method == "POST":
+        form = ChemicalForm(**request.form)
+        if form.validate():
+            new_chemical = Chemical(**form.data)
+            db.session.add(new_chemical)
+            db.session.commit()
+            return render_template("create_chemical.html", form=form, success=True)
+        else:
+            return render_template("create_chemical.html", form=ChemicalForm(), invalid=True)
+    else:
+        form = ChemicalForm()
+        return render_template("create_chemical.html", form=form)
+
+
+@app.route("/chemical/<int:id>/update", methods=['GET', 'POST'])
+def chemical_update(id:int):
+    if not session.get('admin'):
+        abort(403)
+    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    dct = object_as_dict(current_chemical)
+    if request.method == "POST":
+        form = ChemicalForm(**request.form)
+        if form.validate():
+            # take the row with id and update it.
+            for k in form.data:
+                setattr(current_chemical, k, form.data[k])
+            db.session.commit()
+            return render_template("create_chemical.html", form=form, success=True, id=id)
+        else:
+            form = ChemicalForm(**dct)
+            return render_template("create_chemical.html", form=form, invalid=True, id=id)
+    else:
+        form = ChemicalForm(**dct)
+        return render_template("create_chemical.html", form=form, id=id)
+
+@app.route("/chemical/<int:id>/delete")
+def chemical_delete(id:int):
+    if not session.get('admin'):
+        abort(403)
+    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    db.session.delete(current_chemical)
+    db.session.commit()
+    return render_template("delete_chemical.html", id=id)
+
+
+@app.route("/chemical/<int:id>/view")
+def chemical_view(id:int):
+    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    dct = object_as_dict(current_chemical)
+    return render_template("view_chemical.html", id=id, chemical=dct)
+
+
+@app.route("/chemical/all")
+def chemical_all():
+    if not session.get('admin'):
+        abort(403)
+    result = Chemical.query.all()
+    data = []
+    for x in result:
+        data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+    return jsonify(data)
+
+@app.route("/chemical/search")
+def search_api():
+    mz_min, mz_max = request.args.get('mz_min'), request.args.get('mz_max')
+    rt_min, rt_max = request.args.get('rt_min'), request.args.get('rt_max')
+    if (mz_min is None and mz_max is None) or (rt_min is None and rt_max is None):
+        abort(400)
+    try:
+        if mz_min is not None and mz_max is None:
+            mz_max = float(mz_min) + 3
+        elif mz_max is not None and mz_min is None:
+            mz_min = float(mz_max) - 3
+        if rt_min is not None and rt_max is None:
+            rt_max = float(rt_min) + 3
+        elif rt_max is not None and rt_min is None:
+            rt_min = rt_max - 3
+        mz_min, mz_max = float(mz_min), float(mz_max)
+        rt_min, rt_max = float(rt_min), float(rt_max)
+    except ValueError:
+        abort(400)
+    
+    print(mz_min, mz_max, "  ", rt_min, rt_max)
+    
+    mz_filter = and_(mz_max > Chemical.final_mz, Chemical.final_mz > mz_min)
+    rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
+    result = Chemical.query.filter(
+               or_(mz_filter, rt_filter) 
+            ).limit(20).all()
+    print("Got Result", result)
+    data = []
+    for x in result:
+        data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+    return jsonify(data)
+
 
 @app.route("/search")
 def search():
-    return "searching url"
-
+    return render_template("search.html")
 
 if __name__ == "__main__":
     db.init_app(app)
