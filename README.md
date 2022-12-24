@@ -11,3 +11,7 @@ You need to have poetry installed on your system.
 2. Install poetry dependencies with `poetry install`
 3. Activate the poetry virtual environment with `poetry shell`
 4. Start the development server by executing the `app.py` file.
+
+# Deployment
+
+Just use the built-in docker compose and run `docker-compose up`.
