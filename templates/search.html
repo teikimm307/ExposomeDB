@@ -62,14 +62,40 @@
     <h1>Search Box</h1>
     <div id="search">
     <main>
-        <label for="mz_min">Mz Min</label>
-        <input id="mz_min" type="number" name="mz_min" v-model="mz_min" @input="fetch_data()" value="0">
-        <label for="mz_min">Mz Max</label>
-        <input id="mz_max" type="number" name="mz_max" v-model="mz_max" @input="fetch_data()" value="0">
-        <label for="mz_min">RT Min</label>
-        <input id="rt_min" type="number" name="rt_min" v-model="rt_min" @input="fetch_data()" value="0">
-        <label for="mz_min">RT Max</label>
-        <input id="rt_max" type="number" name="rt_max" v-model="rt_max" @input="fetch_data()" value="0">
+        <table>
+            <tr>
+                <td>
+                    <label for="mz_min">Minimum M/Z Ratio</label>
+                </td>
+                <td>
+                    <input id="mz_min" type="number" name="mz_min" v-model="mz_min" @input="fetch_data()" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Maximum M/Z Ratio</label>
+                </td>
+                <td>
+                    <input id="mz_max" type="number" name="mz_max" v-model="mz_max" @input="fetch_data()" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Minimum Retention Time</label>
+                </td>
+                <td>
+                    <input id="rt_min" type="number" name="rt_min" v-model="rt_min" @input="fetch_data()" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Maximum Retention Time</label>
+                </td>
+                <td>
+                    <input id="rt_max" type="number" name="rt_max" v-model="rt_max" @input="fetch_data()" value="0">
+                </td>
+            </tr>
+        </table>
 
         <!--
         <br>
@@ -88,11 +114,11 @@
             </a>
             <table>
                 <tr>
-                    <td>Rt</td>
+                    <td>Retention Time</td>
                     <td>{{result.rt}}</td>
                 </tr>
                 <tr>
-                    <td>Mz</td>
+                    <td>M/Z Ratio</td>
                     <td>{{result.mz}}</td>
                 </tr>
             </table>
