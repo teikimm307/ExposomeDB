@@ -39,22 +39,22 @@
 import requests
 session = requests.session()
 baseurl = "chemicaldb.teidkim.me"
-session.post(baseurl + "/admin/login", {"username": &lt;username&gt;, "password": &lt;password&gt;})
+session.post(baseurl + "/admin/login", {"username": (username), "password": (password)})
 fields = {
     "chemical_db_id": &lt;db id from another database&gt;,
-    "library": (library),
+    "library": (library, is a string),
     # name, formula, and mass are required fields!
-    "name": (name of the chemical),
-    "formula": (molecular formula),
-    "mass": (monoisotopic mass, float),
+    "name": (name of the chemical, is a string),
+    "formula": (molecular formula, is a string),
+    "mass": (monoisotopic mass, is a float),
     "pubchem_cid": &lt;string&gt;,
     "pubmed_refcount": &lt;integer&gt;
     "standard_class": &lt;string&gt;
-    "inchikey": &lt;inchikey&gt;,
-    "inchikey14": &lt;inchikey14&gt;,
+    "inchikey": &lt;string&gt;,
+    "inchikey14": &lt;string&gt;,
     # final_mz and final_rt are required fields!
-    "final_mz": (m/z ratio after experiment, float),
-    "final_rt": (retention time after experiment, float),
+    "final_mz": (m/z ratio after experiment, is a float),
+    "final_rt": (retention time after experiment, is a float),
     "final_adduct": &lt;string&gt;,
     "final_adduct": &lt;string&gt;,
     "detected_adducts": &lt;string&gt;,
