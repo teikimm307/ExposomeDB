@@ -234,7 +234,7 @@ def search_api():
     mz_min, mz_max = request.args.get('mz_min'), request.args.get('mz_max')
     rt_min, rt_max = request.args.get('rt_min'), request.args.get('rt_max')
     if (mz_min is None and mz_max is None) or (rt_min is None and rt_max is None):
-        abort(400)
+        return jsonify({"error": "invalid data"}), 400
     try:
         if mz_min is not None and mz_max is None:
             mz_max = float(mz_min) + 3
@@ -247,8 +247,8 @@ def search_api():
         mz_min, mz_max = float(mz_min), float(mz_max)
         rt_min, rt_max = float(rt_min), float(rt_max)
     except ValueError:
-        abort(400)
-    
+        return jsonify({"error": "invalid data"}), 400
+
     mz_filter = and_(mz_max > Chemical.final_mz, Chemical.final_mz > mz_min)
     rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
     result = Chemical.query.filter(

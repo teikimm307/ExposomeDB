@@ -1,11 +1,68 @@
 {% extends "base.html" %}
 {% block content %}
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
     <h1>Admin Dashboard</h1>
     <article>
-        <p>You are {{user}}</p>
+        <p>Logged in as {{user}}</p>
         <a href="{{url_for('chemical_create')}}">
             <button>
                 Add a Chemical
-            </button></a>
+            </button>
+        </a>
+        <h2>Admin Authentication</h2>
+        <p>
+            Since there is now an admin, only admins can create new admin accounts. You can do so through the <code>/admin/create</code>
+            route.
+        </p>
+        <h2>API Routes</h2>
+        <ul>
+            <li><code>/chemical/all</code> - returns all chemicals in the database as JSON</li>
+            <li><code>/chemical/search</code> - returns JSON for search queries. This endpoint takes GET parameters as follows:
+                <ul>
+                    <li>mz_min: Minimum M/Z Ratio</li>
+                    <li>mz_max: Maximum M/Z Ratio</li>
+                    <li>rt_min: Minimum Retention Time</li>
+                    <li>rt_max: Maximum Retention Time</li>
+                </ul>
+            </li>
+            <li><code>/chemical/&lt;chemical id&gt;/{view,update,delete}</code> - CRUD endpoints for chemicals.</li>
+        </ul>
+        <h2>Programmatically adding Chemicals</h2>
+        <p>
+            You need admin credentials to access the <code>/chemical/create</code> endpoint, so using an HTTP library
+            like python's requests library is highly recommended for keeping track of session cookies.
+        </p>
+        <pre><code class="language-python">
+import requests
+session = requests.session()
+baseurl = "chemicaldb.teidkim.me"
+session.post(baseurl + "/admin/login", {"username": &lt;username&gt;, "password": &lt;password&gt;})
+fields = {
+    "chemical_db_id": &lt;db id from another database&gt;,
+    "library": (library),
+    # name, formula, and mass are required fields!
+    "name": (name of the chemical),
+    "formula": (molecular formula),
+    "mass": (monoisotopic mass, float),
+    "pubchem_cid": &lt;string&gt;,
+    "pubmed_refcount": &lt;integer&gt;
+    "standard_class": &lt;string&gt;
+    "inchikey": &lt;inchikey&gt;,
+    "inchikey14": &lt;inchikey14&gt;,
+    # final_mz and final_rt are required fields!
+    "final_mz": (m/z ratio after experiment, float),
+    "final_rt": (retention time after experiment, float),
+    "final_adduct": &lt;string&gt;,
+    "final_adduct": &lt;string&gt;,
+    "detected_adducts": &lt;string&gt;,
+    "adduct_calc_mz": &lt;string&gt;,
+    "msms_detected": &lt;string if yes, do not include this field otherwise&gt;
+    "msms_purity": &lt;float&gt;
+}
+session.post(baseurl + "/chemical/create", fields)
+        </code></pre>
     </article>
 {% endblock %}
