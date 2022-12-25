@@ -2,7 +2,7 @@
 
 from flask import Flask, render_template, session, request, abort, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect, or_, and_
+from sqlalchemy import inspect, and_
 from flask_wtf import FlaskForm
 import bcrypt
 from wtforms_alchemy import model_form_factory
@@ -173,7 +173,7 @@ def chemical_create():
             db.session.commit()
             return render_template("create_chemical.html", form=ChemicalForm(), success=True)
         else:
-            return render_template("create_chemical.html", form=form, invalid=True)
+            return render_template("create_chemical.html", form=form, invalid=True), 400
     else:
         form = ChemicalForm()
         return render_template("create_chemical.html", form=form)
@@ -195,7 +195,7 @@ def chemical_update(id: int):
             return render_template("create_chemical.html", form=form, success=True, id=id)
         else:
             form = ChemicalForm(**dct)
-            return render_template("create_chemical.html", form=form, invalid=True, id=id)
+            return render_template("create_chemical.html", form=form, invalid=True, id=id), 400
     else:
         form = ChemicalForm(**dct)
         return render_template("create_chemical.html", form=form, id=id)
@@ -252,7 +252,7 @@ def search_api():
     mz_filter = and_(mz_max > Chemical.final_mz, Chemical.final_mz > mz_min)
     rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
     result = Chemical.query.filter(
-               or_(mz_filter, rt_filter) 
+               and_(mz_filter, rt_filter)
             ).limit(20).all()
     data = []
     for x in result:
