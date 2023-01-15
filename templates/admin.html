@@ -64,5 +64,34 @@ fields = {
 }
 session.post(baseurl + "/chemical/create", fields)
         </code></pre>
+    <h2>Programmatically Searching For Matching Compounds</h2>
+    <pre><code class="language-python">
+import requests
+baseurl = "chemicaldb.teidkim.me"
+# initialize parameters
+
+def generate_parameters(mz, mz_range_ppm, rt, rt_range):
+    return dict(
+      mz_min=(mz - mz_range_ppm/10**6),
+      mz_max=(mz + mz_range_ppm/10**6),
+      rt_min=(rt - rt_range),
+      rt_max=(rt + rt_range)
+    )
+
+mz = &lt; theoretical mz ratio &gt;
+mz_range_ppm = &lt;threshold the mz value should be in ppm units&gt;
+rt = &lt; theoretical retention time &gt;
+rt_range = &lt; seconds in which the rt needs to be in &gt;
+
+# make a request to the endpoint.
+response = requests.get(baseurl + "/chemical/search", params=generate_parameters(mz, mz_range_ppm, rt, rt_range))
+# make sure to include some error handling code.
+results = response.json()
+
+# results is a json containing a list of chemicals with the same schema as above.
+# There are up to 10 search results per query, so you should write some code to
+# determine which result is best.
+    </code></pre>
+
     </article>
 {% endblock %}

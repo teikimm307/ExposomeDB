@@ -253,7 +253,7 @@ def search_api():
     rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
     result = Chemical.query.filter(
                and_(mz_filter, rt_filter)
-            ).limit(20).all()
+            ).limit(10).all()
     data = []
     for x in result:
         data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
