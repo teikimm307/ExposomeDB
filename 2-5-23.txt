@@ -1,0 +1,12 @@
+# Changes to Make
+
+- Show how to make a network request in R to the server
+- Version Control (what date a compound was added)
+  - createdAt, but configurable.
+  - Compare the database to the list of compunds and you only want compounds
+    from that date or before?
+
+- Emphasizing Local? - Accessible through a url.
+
+- Shiny app
+  - Permissions System (revoke, access API keys)

@@ -6,22 +6,21 @@ from sqlalchemy import inspect, and_
 from flask_wtf import FlaskForm
 import bcrypt
 from wtforms_alchemy import model_form_factory
+from flask_migrate import Migrate
 
-db: SQLAlchemy = SQLAlchemy()
 app = Flask(__name__)
-
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
-db.init_app(app)
-
+db: SQLAlchemy = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 BaseModelForm = model_form_factory(FlaskForm)
 
 
 class ModelForm(BaseModelForm):
     @classmethod
-    def get_session(self):
+    def get_session(cls):
         return db.session
 
 
@@ -86,6 +85,8 @@ class Chemical(db.Model):
     adduct_calc_mz = db.Column(db.String)
     msms_detected = db.Column(db.Boolean)
     msms_purity = db.Column(db.Float)
+
+    createdAt = db.Column(db.Date)
 
 
 class ChemicalForm(ModelForm):
@@ -227,7 +228,6 @@ def chemical_all():
     for x in result:
         data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
     return jsonify(data)
-
 
 @app.route("/chemical/search")
 def search_api():
