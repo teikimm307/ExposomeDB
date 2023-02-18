@@ -2,11 +2,11 @@
 
 - Show how to make a network request in R to the server
 - Version Control (what date a compound was added)
-  - createdAt, but configurable.
+  - createdAt, but configurable. DONE
   - Compare the database to the list of compunds and you only want compounds
-    from that date or before?
+    from that date or before? DONE
 
-- Emphasizing Local? - Accessible through a url.
+- Emphasizing Local? - Accessible through a url. DONE, all fields accessible.
 
 - Shiny app
   - Permissions System (revoke, access API keys)

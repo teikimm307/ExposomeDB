@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import date
 from flask import Flask, render_template, session, request, abort, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, and_
@@ -69,7 +70,7 @@ class Chemical(db.Model):
     name = db.Column(db.String, nullable=False)
     formula = db.Column(db.String, nullable=False)
     mass = db.Column(db.Float, nullable=False)
-    
+
     pubchem_cid = db.Column(db.Integer)
     pubmed_refcount = db.Column(db.Integer)
     standard_class = db.Column(db.String)
@@ -86,6 +87,7 @@ class Chemical(db.Model):
     msms_detected = db.Column(db.Boolean)
     msms_purity = db.Column(db.Float)
 
+    # serialized into datetime.date
     createdAt = db.Column(db.Date)
 
 
@@ -123,13 +125,15 @@ def admin_create():
     if request.method == "GET":
         return render_template("register.html")
     else:
-        username, pw = request.form.get('username'), request.form.get('password')
+        username, pw = request.form.get(
+            'username'), request.form.get('password')
         if username is None or pw is None:
             return render_template("register.html", fail="Invalid Input.")
         elif db.session.execute(db.select(Admin).filter_by(username=username)).fetchone():
             return render_template("register.html", fail="Username already exists.")
         else:
-            db.session.add(Admin(username=username, password=Admin.generate_password(pw)))
+            db.session.add(
+                Admin(username=username, password=Admin.generate_password(pw)))
             db.session.commit()
             return render_template("register.html", success=True)
 
@@ -137,7 +141,8 @@ def admin_create():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == "POST":
-        username, pw = request.form.get('username', ''), request.form.get('password', '')
+        username, pw = request.form.get(
+            'username', ''), request.form.get('password', '')
         if Admin.authenticate(username, pw):
             return render_template("login.html", success=True)
         else:
@@ -184,7 +189,7 @@ def chemical_create():
 def chemical_update(id: int):
     if not session.get('admin'):
         abort(403)
-    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    current_chemical: Chemical = Chemical.query.filter_by(id=id).one_or_404()
     dct = object_as_dict(current_chemical)
     if request.method == "POST":
         form = ChemicalForm(**request.form)
@@ -206,7 +211,7 @@ def chemical_update(id: int):
 def chemical_delete(id: int):
     if not session.get('admin'):
         abort(403)
-    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    current_chemical: Chemical = Chemical.query.filter_by(id=id).one_or_404()
     db.session.delete(current_chemical)
     db.session.commit()
     return render_template("delete_chemical.html", id=id)
@@ -214,7 +219,7 @@ def chemical_delete(id: int):
 
 @app.route("/chemical/<int:id>/view")
 def chemical_view(id: int):
-    current_chemical:Chemical = Chemical.query.filter_by(id=id).one_or_404()
+    current_chemical: Chemical = Chemical.query.filter_by(id=id).one_or_404()
     dct = object_as_dict(current_chemical)
     return render_template("view_chemical.html", id=id, chemical=dct)
 
@@ -223,40 +228,42 @@ def chemical_view(id: int):
 def chemical_all():
     if not session.get('admin'):
         abort(403)
-    result = Chemical.query.all()
+    result: list[Chemical] = Chemical.query.all()
     data = []
     for x in result:
-        data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+        data.append({c.name: getattr(x, c.name) for c in x.__table__.columns})
     return jsonify(data)
 
-@app.route("/chemical/search")
-def search_api():
-    mz_min, mz_max = request.args.get('mz_min'), request.args.get('mz_max')
-    rt_min, rt_max = request.args.get('rt_min'), request.args.get('rt_max')
-    if (mz_min is None and mz_max is None) or (rt_min is None and rt_max is None):
-        return jsonify({"error": "invalid data"}), 400
-    try:
-        if mz_min is not None and mz_max is None:
-            mz_max = float(mz_min) + 3
-        elif mz_max is not None and mz_min is None:
-            mz_min = float(mz_max) - 3
-        if rt_min is not None and rt_max is None:
-            rt_max = float(rt_min) + 3
-        elif rt_max is not None and rt_min is None:
-            rt_min = float(rt_max) - 3
-        mz_min, mz_max = float(mz_min), float(mz_max)
-        rt_min, rt_max = float(rt_min), float(rt_max)
-    except ValueError:
-        return jsonify({"error": "invalid data"}), 400
 
-    mz_filter = and_(mz_max > Chemical.final_mz, Chemical.final_mz > mz_min)
-    rt_filter = and_(rt_max > Chemical.final_rt, Chemical.final_rt > rt_min)
+@app.route("/chemical/search", methods=["POST"])
+def search_api():
+    query = request.json
+    if query is None:
+        return jsonify([])
+    for field in query:
+        query[field] = float(query[field])
+    mz_min, mz_max = query.get('mz_min'), query.get('mz_max')
+    rt_min, rt_max = query.get('rt_min'), query.get('rt_max')
+    year_max, month_max, day_max = int(query.get(
+        'year_max')), int(query.get('month_max')), int(query.get('day_max'))
+
+    try:
+        mz_filter = and_(mz_max > Chemical.final_mz,
+                         Chemical.final_mz > mz_min)
+        rt_filter = and_(rt_max > Chemical.final_rt,
+                         Chemical.final_rt > rt_min)
+        date_filter = date(year_max, month_max, day_max) >= Chemical.createdAt
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
     result = Chemical.query.filter(
-               and_(mz_filter, rt_filter)
-            ).limit(10).all()
+        and_(mz_filter, rt_filter, date_filter)
+    ).limit(20).all()
+
     data = []
     for x in result:
-        data.append({"url": url_for("chemical_view", id=x.id), "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+        data.append({"url": url_for("chemical_view", id=x.id),
+                    "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
     return jsonify(data)
 
 
