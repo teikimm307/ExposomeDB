@@ -12,6 +12,16 @@
                 Add a Chemical
             </button>
         </a>
+        <a href="{{url_for('batch_add_request')}}">
+            <button>
+                Batch Add Chemicals
+            </button>
+        </a>
+        <a href="{{url_for('batch_query_request')}}">
+            <button>
+                Batch Search Chemicals
+            </button>
+        </a>
         <h2>Admin Authentication</h2>
         <p>
             Since there is now an admin, only admins can create new admin accounts. You can do so through the <code>/admin/create</code>

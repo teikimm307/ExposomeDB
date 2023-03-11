@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Batch Upload Chemicals</h2>
+<a href="https://git.junickim.me/junikimm717/walker-database/raw/master/validate.py"> Source Code with required type definitions </a>
+
+<form method="post" enctype="multipart/form-data">
+    <label for="csv">CSV: </label>
+    <input type="file" name="csv">
+    <input type="submit" value="Submit">
+</form>
+
+{% if invalid %}
+<p style="color: red;">Data Points are Incorrectly added: {{invalid}}</p>
+{% endif %}
+
+{% if success %}
+<p style="color: green;">Success!</p>
+{% endif %}
+
+{% endblock %}

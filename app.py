@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import date
+import os
 from flask import Flask, render_template, session, request, abort, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, and_
@@ -8,6 +9,9 @@ from flask_wtf import FlaskForm
 import bcrypt
 from wtforms_alchemy import model_form_factory
 from flask_migrate import Migrate
+from uuid import uuid4
+import csv
+from validate import validate_insertion_csv_fields, validate_query_csv_fields
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
@@ -51,8 +55,10 @@ class Admin(db.Model):
 
     @classmethod
     def authorize(cls):
-        if not session.get('admin'):
+        if "admin" not in session:
             return redirect(url_for("admin_login"))
+        else:
+            return None
 
 
 def object_as_dict(obj):
@@ -153,7 +159,8 @@ def admin_login():
 
 @app.route('/admin/logout', methods=['GET'])
 def admin_logout():
-    session.pop('admin')
+    if "admin" in session:
+        session.pop('admin')
     return redirect(url_for('home'))
 
 
@@ -252,12 +259,12 @@ def search_api():
                          Chemical.final_mz > mz_min)
         rt_filter = and_(rt_max > Chemical.final_rt,
                          Chemical.final_rt > rt_min)
-        date_filter = date(year_max, month_max, day_max) >= Chemical.createdAt
+        # date_filter = date(year_max, month_max, day_max) >= Chemical.createdAt
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
     result = Chemical.query.filter(
-        and_(mz_filter, rt_filter, date_filter)
+        and_(mz_filter, rt_filter)
     ).limit(20).all()
 
     data = []
@@ -265,6 +272,88 @@ def search_api():
         data.append({"url": url_for("chemical_view", id=x.id),
                     "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
     return jsonify(data)
+
+
+# Utilities for doing add and search operations in batch
+# no file over 3MB is allowed.
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1000 * 1000
+
+
+@app.route("/chemical/batchadd", methods=["GET", "POST"])
+def batch_add_request():
+    if not session.get('admin'):
+        abort(403)
+    if request.method == "POST":
+        if "csv" not in request.files or request.files["csv"].filename == '':
+            return render_template("batchadd.html", invalid="Blank file included")
+        # save the file to RAM
+        file = request.files["csv"]
+        os.makedirs("/tmp/walkerdb", exist_ok=True)
+        filename = os.path.join("/tmp/walkerdb", str(uuid4()))
+        file.save(filename)
+        # perform cleanup regardless of what happens.
+        def cleanup(): return os.remove(filename)
+        # read it as a csv
+        with open(filename, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            results, error = validate_insertion_csv_fields(reader)
+            if error:
+                cleanup()
+                return render_template("batchadd.html", invalid=error)
+            else:
+                chemicals = [Chemical(**result) for result in results]
+                db.session.add_all(chemicals)
+                db.session.commit()
+                cleanup()
+                return render_template("batchadd.html", success=True)
+    else:
+        return render_template("batchadd.html")
+
+
+@app.route("/chemical/batch", methods=["GET", "POST"])
+def batch_query_request():
+    if not session.get('admin'):
+        abort(403)
+    if request.method == "POST":
+        if "csv" not in request.files or request.files["csv"].filename == '':
+            return render_template("batchadd.html", invalid="Blank file included")
+        # save the file to RAM
+        file = request.files["csv"]
+        os.makedirs("/tmp/walkerdb", exist_ok=True)
+        filename = os.path.join("/tmp/walkerdb", str(uuid4()))
+        file.save(filename)
+        # perform cleanup regardless of what happens.
+        def cleanup(): return os.remove(filename)
+        # read it as a csv
+        with open(filename, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            queries, error = validate_query_csv_fields(reader)
+            if error:
+                cleanup()
+                return render_template("batchquery.html", invalid=error)
+            else:
+                # generate the queries here.
+                data = []
+                for query in queries:
+                    mz_filter = and_(query["mz_max"] > Chemical.final_mz,
+                                     Chemical.final_mz > query["mz_min"])
+                    rt_filter = and_(query["rt_max"] > Chemical.final_rt,
+                                     Chemical.final_rt > query["rt_min"])
+                    # date_filter = query["date"] >= Chemical.createdAt
+                    result = Chemical.query.filter(
+                        and_(mz_filter, rt_filter)
+                    ).limit(5).all()
+                    hits = []
+                    for x in result:
+                        hits.append({"url": url_for("chemical_view", id=x.id),
+                                    "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+                    data.append(dict(
+                        query=query,
+                        hits=hits,
+                    ))
+                cleanup()
+                return render_template("batchquery.html", success=True, data=data)
+    return render_template("batchquery.html")
 
 
 @app.route("/search")
