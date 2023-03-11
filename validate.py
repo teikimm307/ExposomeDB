@@ -1,20 +1,31 @@
 import csv
 from datetime import date
 
+"""
+Required fields when inserting into the database.
+"""
+
 _required_fields = [
+    # the "str" type means that this field can be any valid string.
     ("name",                "str"),
     ("formula",             "str"),
+    # any field labeled a "float" needs to have a value in decimal notation.
     ("mass",                "float"),
 
     ("final_mz",            "float"),
     ("final_rt",            "float"),
 ]
 
+
+"""
+Optional fields and corresponding types when batch inserting into the database.
+"""
+
 _optional_fields = [
     ("chemical_db_id",      "str"),
     ("library",             "str"),
 
-    ("pubchem_cid",         "int"),
+    ("pubchem_cid",         "int"),  # Only integers are permitted.
     ("pubmed_refcount",     "int"),
     ("standard_class",      "str"),
     ("inchikey",            "str"),
@@ -24,9 +35,13 @@ _optional_fields = [
     ("adduct",              "str"),
     ("detected_adducts",    "str"),
     ("adduct_calc_mz",      "str"),
-    ("msms_detected",       "yesno"),
+    ("msms_detected",       "yesno"),  # Value can either be "Yes" or "No"
     ("msms_purity",         "float"),
 ]
+
+"""
+All fields (excluding those that are commented) are mandatory to include.
+"""
 
 _query_fields = [
     ("rt_min",                "float"),
