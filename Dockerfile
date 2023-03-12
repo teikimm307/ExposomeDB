@@ -14,4 +14,5 @@ RUN poetry install --no-dev
 # now copy over everything
 COPY . /app/
 
+EXPOSE 5002
 ENTRYPOINT ["/app/entrypoint.sh"]

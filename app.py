@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from datetime import date
 import os
 from flask import Flask, render_template, session, request, abort, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -11,14 +10,18 @@ from wtforms_alchemy import model_form_factory
 from flask_migrate import Migrate
 from uuid import uuid4
 import csv
-from validate import validate_insertion_csv_fields, validate_query_csv_fields
+import validate
+
+# from datetime import date
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
-db: SQLAlchemy = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db: SQLAlchemy = SQLAlchemy()
+migrate = Migrate()
+db.init_app(app)
+migrate.init_app(app, db)
 
 BaseModelForm = model_form_factory(FlaskForm)
 
@@ -296,7 +299,7 @@ def batch_add_request():
         # read it as a csv
         with open(filename, "r") as csvfile:
             reader = csv.DictReader(csvfile)
-            results, error = validate_insertion_csv_fields(reader)
+            results, error = validate.validate_insertion_csv_fields(reader)
             if error:
                 cleanup()
                 return render_template("batchadd.html", invalid=error)
@@ -327,7 +330,7 @@ def batch_query_request():
         # read it as a csv
         with open(filename, "r") as csvfile:
             reader = csv.DictReader(csvfile)
-            queries, error = validate_query_csv_fields(reader)
+            queries, error = validate.validate_query_csv_fields(reader)
             if error:
                 cleanup()
                 return render_template("batchquery.html", invalid=error)

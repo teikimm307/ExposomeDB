@@ -15,11 +15,10 @@
         pkgs = import nixpkgs { inherit system; };
         version = "0.1.0";
         name = "package name";
-        myR = pkgs.rWrapper.override{ packages = with pkgs.rPackages; [ crul ]; };
       in {
 
         devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [ python3 poetry myR ];
+          buildInputs = with pkgs; [ python3 poetry gunicorn ];
         };
 
         defaultPackage = pkgs.stdenv.mkDerivation { inherit name version; };
