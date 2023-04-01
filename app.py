@@ -72,6 +72,8 @@ def object_as_dict(obj):
 class Chemical(db.Model):
     query: db.Query
     id = db.Column(db.Integer, primary_key=True)
+    standard_grp = db.Column(db.String, nullable=False)
+    uploaded_by = db.Column(db.String, nullable=False)
     # all fields after here are included in the database
     chemical_db_id = db.Column(db.String)
     library = db.Column(db.String)
@@ -89,7 +91,7 @@ class Chemical(db.Model):
     final_mz = db.Column(db.Float, nullable=False)
     final_rt = db.Column(db.Float, nullable=False)
 
-    final_adduct = db.Column(db.String)
+    final_adduct = db.Column(db.String, nullable=False)
     adduct = db.Column(db.String)
     detected_adducts = db.Column(db.String)
     adduct_calc_mz = db.Column(db.String)
@@ -298,7 +300,7 @@ def batch_add_request():
         def cleanup(): return os.remove(filename)
         # read it as a csv
         with open(filename, "r") as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, delimiter="\t")
             results, error = validate.validate_insertion_csv_fields(reader)
             if error:
                 cleanup()

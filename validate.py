@@ -1,5 +1,4 @@
 import csv
-from datetime import date
 
 """
 Required fields when inserting into the database.
@@ -14,6 +13,9 @@ _required_fields = [
 
     ("final_mz",            "float"),
     ("final_rt",            "float"),
+    ("final_adduct",        "str"),
+    ("standard_grp",        "str"),
+    ("uploaded_by",         "str"),
 ]
 
 
@@ -31,7 +33,6 @@ _optional_fields = [
     ("inchikey",            "str"),
     ("inchikey14",          "str"),
 
-    ("final_adduct",        "str"),
     ("adduct",              "str"),
     ("detected_adducts",    "str"),
     ("adduct_calc_mz",      "str"),
