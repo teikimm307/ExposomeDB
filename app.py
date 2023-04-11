@@ -11,13 +11,16 @@ from flask_migrate import Migrate
 from uuid import uuid4
 import csv
 import validate
+import secrets
+from dotenv import load_dotenv
 
+load_dotenv()
 # from datetime import date
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
-app.secret_key = '98d31240f9fbe14c8083586db49c19c3a8d3f726'
 
+app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(16))
 db: SQLAlchemy = SQLAlchemy()
 migrate = Migrate()
 db.init_app(app)
@@ -72,20 +75,20 @@ def object_as_dict(obj):
 class Chemical(db.Model):
     query: db.Query
     id = db.Column(db.Integer, primary_key=True)
+    person_name = db.Column(db.String, nullable=False)
     standard_grp = db.Column(db.String, nullable=False)
-    uploaded_by = db.Column(db.String, nullable=False)
     # all fields after here are included in the database
     chemical_db_id = db.Column(db.String)
     library = db.Column(db.String)
     # important fields
-    name = db.Column(db.String, nullable=False)
+    metabolite_name = db.Column(db.String, nullable=False)
     formula = db.Column(db.String, nullable=False)
     mass = db.Column(db.Float, nullable=False)
 
     pubchem_cid = db.Column(db.Integer)
     pubmed_refcount = db.Column(db.Integer)
     standard_class = db.Column(db.String)
-    inchikey = db.Column(db.String)
+    inchikey = db.Column(db.String, nullable=False)
     inchikey14 = db.Column(db.String)
 
     final_mz = db.Column(db.Float, nullable=False)
@@ -95,7 +98,7 @@ class Chemical(db.Model):
     adduct = db.Column(db.String)
     detected_adducts = db.Column(db.String)
     adduct_calc_mz = db.Column(db.String)
-    msms_detected = db.Column(db.Boolean)
+    msms_detected = db.Column(db.Boolean, nullable=False)
     msms_purity = db.Column(db.Float)
 
     # serialized into datetime.date
@@ -275,7 +278,7 @@ def search_api():
     data = []
     for x in result:
         data.append({"url": url_for("chemical_view", id=x.id),
-                    "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+                    "name": x.metabolite_name, "mz": x.final_mz, "rt": x.final_rt})
     return jsonify(data)
 
 
@@ -289,10 +292,10 @@ def batch_add_request():
     if not session.get('admin'):
         abort(403)
     if request.method == "POST":
-        if "csv" not in request.files or request.files["csv"].filename == '':
+        if "input" not in request.files or request.files["input"].filename == '':
             return render_template("batchadd.html", invalid="Blank file included")
         # save the file to RAM
-        file = request.files["csv"]
+        file = request.files["input"]
         os.makedirs("/tmp/walkerdb", exist_ok=True)
         filename = os.path.join("/tmp/walkerdb", str(uuid4()))
         file.save(filename)
@@ -320,10 +323,10 @@ def batch_query_request():
     if not session.get('admin'):
         abort(403)
     if request.method == "POST":
-        if "csv" not in request.files or request.files["csv"].filename == '':
+        if "input" not in request.files or request.files["input"].filename == '':
             return render_template("batchadd.html", invalid="Blank file included")
         # save the file to RAM
-        file = request.files["csv"]
+        file = request.files["input"]
         os.makedirs("/tmp/walkerdb", exist_ok=True)
         filename = os.path.join("/tmp/walkerdb", str(uuid4()))
         file.save(filename)
@@ -331,7 +334,7 @@ def batch_query_request():
         def cleanup(): return os.remove(filename)
         # read it as a csv
         with open(filename, "r") as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, delimiter="\t")
             queries, error = validate.validate_query_csv_fields(reader)
             if error:
                 cleanup()
@@ -351,7 +354,7 @@ def batch_query_request():
                     hits = []
                     for x in result:
                         hits.append({"url": url_for("chemical_view", id=x.id),
-                                    "name": x.name, "mz": x.final_mz, "rt": x.final_rt})
+                                    "name": x.metabolite_name, "mz": x.final_mz, "rt": x.final_rt})
                     data.append(dict(
                         query=query,
                         hits=hits,

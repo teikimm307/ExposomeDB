@@ -53,8 +53,9 @@ session.post(baseurl + "/admin/login", {"username": (username), "password": (pas
 fields = {
     "chemical_db_id": &lt;db id from another database&gt;,
     "library": (library, is a string),
+    "person_name": (name of person who uploaded, string)
     # name, formula, and mass are required fields!
-    "name": (name of the chemical, is a string),
+    "metabolite_name": (name of the chemical, is a string),
     "formula": (molecular formula, is a string),
     "mass": (monoisotopic mass, is a float),
     "pubchem_cid": &lt;string&gt;,

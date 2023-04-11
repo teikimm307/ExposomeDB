@@ -6,8 +6,9 @@ Required fields when inserting into the database.
 
 _required_fields = [
     # the "str" type means that this field can be any valid string.
-    ("name",                "str"),
+    ("metabolite_name",     "str"),
     ("formula",             "str"),
+    ("person_name",         "str"),
     # any field labeled a "float" needs to have a value in decimal notation.
     ("mass",                "float"),
 
@@ -15,7 +16,9 @@ _required_fields = [
     ("final_rt",            "float"),
     ("final_adduct",        "str"),
     ("standard_grp",        "str"),
-    ("uploaded_by",         "str"),
+    ("person_name",         "str"),
+    ("msms_detected",       "yesno"),  # Value can either be "Yes" or "No"
+    ("inchikey",            "str"),
 ]
 
 
@@ -30,13 +33,11 @@ _optional_fields = [
     ("pubchem_cid",         "int"),  # Only integers are permitted.
     ("pubmed_refcount",     "int"),
     ("standard_class",      "str"),
-    ("inchikey",            "str"),
     ("inchikey14",          "str"),
 
     ("adduct",              "str"),
     ("detected_adducts",    "str"),
     ("adduct_calc_mz",      "str"),
-    ("msms_detected",       "yesno"),  # Value can either be "Yes" or "No"
     ("msms_purity",         "float"),
 ]
 
@@ -89,6 +90,7 @@ def validate_insertion_csv_fields(reader: csv.DictReader) -> tuple[list[dict], s
     chemicals: list[dict] = []
     for row in reader:
         chemical = {}
+        print("row", row)
         for field, t in _required_fields:
             if field not in row:
                 return [], f"Required field \"{field}\" not present in csv"

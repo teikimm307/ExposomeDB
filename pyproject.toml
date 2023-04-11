@@ -15,6 +15,7 @@ wtforms-alchemy = "^0.18.0"
 flask-wtf = "^1.0.1"
 gunicorn = "^20.1.0"
 Flask-Migrate = "^4.0.4"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^2.0.1"
