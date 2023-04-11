@@ -90,7 +90,6 @@ def validate_insertion_csv_fields(reader: csv.DictReader) -> tuple[list[dict], s
     chemicals: list[dict] = []
     for row in reader:
         chemical = {}
-        print("row", row)
         for field, t in _required_fields:
             if field not in row:
                 return [], f"Required field \"{field}\" not present in csv"
