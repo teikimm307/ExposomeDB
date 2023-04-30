@@ -3,6 +3,8 @@
 {% block content %}
 <h2>Batch Query Chemicals</h2>
 <a href="https://git.junickim.me/junikimm717/walker-database/raw/master/validate.py"> Source Code with required type definitions </a>
+<br>
+<a href="{{ url_for ('static', filename='search.txt')}}">Sample TSV file to upload</a>
 
 <form method="post" enctype="multipart/form-data">
     <label for="input">Input (tab-delimited text file): </label>

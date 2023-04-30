@@ -56,7 +56,7 @@ class Admin(db.Model):
 
     @classmethod
     def exists(cls):
-        user = Admin.query.one_or_none()
+        user = Admin.query.first()
         return True if user else False
 
     @classmethod

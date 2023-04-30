@@ -163,3 +163,4 @@ cython_debug/
 /R
 .swp
 /test
+.DS_Store
