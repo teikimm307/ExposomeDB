@@ -15,6 +15,14 @@
 <table>
     {% for k,v in chemical.items() %}
     <tr>
+      {% if k == "person_id" %}
+        <td>
+            <strong>{{k}}</strong>
+        </td>
+        <td>
+          <a href="{{url_for('accounts_view', id=v)}}">User ID {{v}}</a>
+        </td>
+      {% else %}
         <td>
             <strong>{{k}}</strong>
         </td>
@@ -23,6 +31,7 @@
             {{ v }}
             {% endif %}
         </td>
+      {% endif %}
     </tr>
     {% endfor %}
 </table>

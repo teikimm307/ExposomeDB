@@ -83,7 +83,7 @@ class User(db.Model):
     @classmethod
     def authorize_or_redirect(cls, admin=True):
         if (admin and "admin" not in session) or "user" not in session:
-            return redirect(url_for("accounts_create"))
+            return redirect(url_for("login"))
         else:
             return None
 
@@ -91,7 +91,7 @@ class User(db.Model):
 class Chemical(db.Model):
     query: db.Query
     id = db.Column(db.Integer, primary_key=True)
-    person_name = db.Column(db.String, nullable=False)
+    person_id = db.Column(db.Integer, nullable=False)
     standard_grp = db.Column(db.String, nullable=False)
     # all fields after here are included in the database
     chemical_db_id = db.Column(db.String)
@@ -140,11 +140,13 @@ def handler_403(msg):
 
 
 # Admin routes
-@app.route('/admin')
+@app.route('/dashboard')
 def admin_root():
-    if login := User.authorize_or_redirect():
-        return login
-    return render_template("admin.html", user=session.get("admin"))
+    if 'admin' in session:
+        return render_template("admin.html", user=session.get("admin"))
+    if 'user' in session:
+        return render_template("user.html", user=session.get("user"))
+    return User.authorize_or_redirect(admin=False) or ""
 
 
 @app.route('/accounts/create', methods=['GET', 'POST'])
@@ -165,7 +167,7 @@ def accounts_create():
             # because the IDE complains about type mismatches
             form = {} | request.form
             form['password'] = User.generate_password(pw)
-            form['admin'] = (True if form['admin'] == 'y' else False)
+            form['admin'] = (True if form.get('admin') == 'y' else False)
             form.pop('reconfirm')
             user = User(**form)
             db.session.add(user)
@@ -191,9 +193,7 @@ def accounts_edit():
 
 
 @app.route('/accounts/view/<int:id>')
-def accounts_edit_admin(id):
-    if login := User.authorize_or_redirect(admin=True):
-        return login
+def accounts_view(id):
     user = User.query.filter_by(id=id).one_or_404()
     return render_template("account_view.html", user=object_as_dict(user))
 
@@ -234,18 +234,19 @@ def home():
 def chemical_create():
     if not session.get('admin'):
         abort(403)
+    user = User.query.filter_by(username=session.get('user')).one_or_404()
     if request.method == "POST":
-        form = ChemicalForm(**request.form)
+        form = ChemicalForm(**(request.form | {"person_id": user.id}))
         if form.validate():
             new_chemical = Chemical(**form.data)
             db.session.add(new_chemical)
             db.session.commit()
-            return render_template("create_chemical.html", form=ChemicalForm(), success=True)
+            return render_template("create_chemical.html", form=ChemicalForm(), user=object_as_dict(user), success=True)
         else:
             return render_template("create_chemical.html", form=form, invalid=True), 400
     else:
-        form = ChemicalForm()
-        return render_template("create_chemical.html", form=form)
+        form = ChemicalForm(person_id=user.id)
+        return render_template("create_chemical.html", form=form, user=object_as_dict(user))
 
 
 @app.route("/chemical/<int:id>/update", methods=['GET', 'POST'])
@@ -339,6 +340,7 @@ app.config['MAX_CONTENT_LENGTH'] = 3 * 1000 * 1000
 def batch_add_request():
     if not session.get('admin'):
         abort(403)
+    user = User.query.filter_by(username=session.get('user')).one_or_404()
     if request.method == "POST":
         if "input" not in request.files or request.files["input"].filename == '':
             return render_template("batchadd.html", invalid="Blank file included")
@@ -357,7 +359,8 @@ def batch_add_request():
                 cleanup()
                 return render_template("batchadd.html", invalid=error)
             else:
-                chemicals = [Chemical(**result) for result in results]
+                chemicals = [Chemical(**result, person_id=user.id)
+                             for result in results]
                 db.session.add_all(chemicals)
                 db.session.commit()
                 cleanup()

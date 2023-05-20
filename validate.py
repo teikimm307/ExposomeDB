@@ -8,7 +8,6 @@ _required_fields = [
     # the "str" type means that this field can be any valid string.
     ("metabolite_name",     "str"),
     ("formula",             "str"),
-    ("person_name",         "str"),
     # any field labeled a "float" needs to have a value in decimal notation.
     ("mass",                "float"),
 
@@ -16,7 +15,6 @@ _required_fields = [
     ("final_rt",            "float"),
     ("final_adduct",        "str"),
     ("standard_grp",        "str"),
-    ("person_name",         "str"),
     ("msms_detected",       "yesno"),  # Value can either be "Yes" or "No"
     ("inchikey",            "str"),
 ]
