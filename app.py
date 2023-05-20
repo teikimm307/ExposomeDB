@@ -26,6 +26,16 @@ migrate = Migrate()
 db.init_app(app)
 migrate.init_app(app, db)
 
+# Helper Methods
+
+
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs}
+
+# Model Forms
+
+
 BaseModelForm = model_form_factory(FlaskForm)
 
 
@@ -35,10 +45,19 @@ class ModelForm(BaseModelForm):
         return db.session
 
 
-class Admin(db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    name = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
+
+    institution = db.Column(db.String, unique=True, nullable=False)
+    position = db.Column(db.String, unique=True, nullable=False)
+
+    admin = db.Column(db.Boolean)
+
+    # for type annotations
     query: db.Query
 
     @classmethod
@@ -47,29 +66,26 @@ class Admin(db.Model):
 
     @classmethod
     def authenticate(cls, username: str, pw: str):
-        user = Admin.query.filter_by(username=username).one_or_none()
+        user = User.query.filter_by(username=username).one_or_none()
         if user and bcrypt.checkpw(pw, user.password):
-            session['admin'] = user.username
+            session['user'] = user.username
+            if user.admin:
+                session['admin'] = user.username
             return user
         else:
             return None
 
     @classmethod
-    def exists(cls):
-        user = Admin.query.first()
+    def admin_exists(cls):
+        user = User.query.filter_by(admin=True).first()
         return True if user else False
 
     @classmethod
-    def authorize(cls):
-        if "admin" not in session:
-            return redirect(url_for("admin_login"))
+    def authorize_or_redirect(cls, admin=True):
+        if (admin and "admin" not in session) or "user" not in session:
+            return redirect(url_for("accounts_create"))
         else:
             return None
-
-
-def object_as_dict(obj):
-    return {c.key: getattr(obj, c.key)
-            for c in inspect(obj).mapper.column_attrs}
 
 
 class Chemical(db.Model):
@@ -126,15 +142,15 @@ def handler_403(msg):
 # Admin routes
 @app.route('/admin')
 def admin_root():
-    if login := Admin.authorize():
+    if login := User.authorize_or_redirect():
         return login
     return render_template("admin.html", user=session.get("admin"))
 
 
-@app.route('/admin/create', methods=['GET', 'POST'])
-def admin_create():
-    if Admin.exists():
-        if login := Admin.authorize():
+@app.route('/accounts/create', methods=['GET', 'POST'])
+def accounts_create():
+    if User.admin_exists():
+        if login := User.authorize_or_redirect():
             return login
     if request.method == "GET":
         return render_template("register.html")
@@ -143,21 +159,51 @@ def admin_create():
             'username'), request.form.get('password')
         if username is None or pw is None:
             return render_template("register.html", fail="Invalid Input.")
-        elif db.session.execute(db.select(Admin).filter_by(username=username)).fetchone():
+        elif db.session.execute(db.select(User).filter_by(username=username)).fetchone():
             return render_template("register.html", fail="Username already exists.")
         else:
-            db.session.add(
-                Admin(username=username, password=Admin.generate_password(pw)))
+            # because the IDE complains about type mismatches
+            form = {} | request.form
+            form['password'] = User.generate_password(pw)
+            form['admin'] = (True if form['admin'] == 'y' else False)
+            form.pop('reconfirm')
+            user = User(**form)
+            db.session.add(user)
             db.session.commit()
             return render_template("register.html", success=True)
 
 
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
+@app.route('/accounts/edit', methods=['GET', 'POST'])
+def accounts_edit():
+    if login := User.authorize_or_redirect(admin=False):
+        return login
+    user = User.query.filter_by(username=session.get('user')).one_or_404()
+    if request.method == "GET":
+        return render_template("account_edit.html", user=object_as_dict(user))
+    else:
+        dct = object_as_dict(user)
+        # update all of the changes
+        for key in request.form:
+            if key in dct:
+                setattr(user, key, request.form[key])
+        db.session.commit()
+        return render_template("account_edit.html", user=object_as_dict(user), success=True)
+
+
+@app.route('/accounts/view/<int:id>')
+def accounts_edit_admin(id):
+    if login := User.authorize_or_redirect(admin=True):
+        return login
+    user = User.query.filter_by(id=id).one_or_404()
+    return render_template("account_view.html", user=object_as_dict(user))
+
+
+@app.route('/accounts/login', methods=['GET', 'POST'])
+def login():
     if request.method == "POST":
         username, pw = request.form.get(
             'username', ''), request.form.get('password', '')
-        if Admin.authenticate(username, pw):
+        if User.authenticate(username, pw):
             return render_template("login.html", success=True)
         else:
             return render_template("login.html", fail="Could not authenticate.")
@@ -165,19 +211,21 @@ def admin_login():
         return render_template("login.html")
 
 
-@app.route('/admin/logout', methods=['GET'])
-def admin_logout():
+@app.route('/accounts/logout', methods=['GET'])
+def logout():
     if "admin" in session:
         session.pop('admin')
+    if "user" in session:
+        session.pop('user')
     return redirect(url_for('home'))
 
 
 @app.route("/")
 def home():
-    if Admin.exists():
+    if User.admin_exists():
         return render_template("index.html")
     else:
-        return redirect(url_for("admin_create"))
+        return redirect(url_for("accounts_create"))
 
 # Routes for CRUD operations on chemicals
 
@@ -318,9 +366,10 @@ def batch_add_request():
         return render_template("batchadd.html")
 
 
+# regular users can batch search.
 @app.route("/chemical/batch", methods=["GET", "POST"])
 def batch_query_request():
-    if not session.get('admin'):
+    if not session.get('user'):
         abort(403)
     if request.method == "POST":
         if "input" not in request.files or request.files["input"].filename == '':
