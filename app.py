@@ -142,10 +142,11 @@ def handler_403(msg):
 # Admin routes
 @app.route('/dashboard')
 def admin_root():
+    user = User.query.filter_by(username=session.get('user')).one_or_404()
     if 'admin' in session:
-        return render_template("admin.html", user=session.get("admin"))
+        return render_template("admin.html", user=user)
     if 'user' in session:
-        return render_template("user.html", user=session.get("user"))
+        return render_template("user.html", user=user)
     return User.authorize_or_redirect(admin=False) or ""
 
 
@@ -190,6 +191,16 @@ def accounts_edit():
                 setattr(user, key, request.form[key])
         db.session.commit()
         return render_template("account_edit.html", user=object_as_dict(user), success=True)
+
+
+@app.route('/accounts/view')
+def accounts_all():
+    if "admin" not in session:
+        abort(403)
+    users = [object_as_dict(u) for u in User.query.all()]
+    for u in users:
+        u.pop("password")
+    return jsonify(users)
 
 
 @app.route('/accounts/view/<int:id>')

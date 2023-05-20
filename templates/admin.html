@@ -4,9 +4,8 @@
           href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
-    <h1>Admin Dashboard</h1>
+    <h1>Welcome, {{user.name | safe}} (Admin)</h1>
     <article>
-        <p>Logged in as {{user}}</p>
         <a href="{{url_for('accounts_edit')}}">
             <button>
                 Edit your profile
@@ -27,10 +26,20 @@
                 Batch Search Chemicals
             </button>
         </a>
-        <h2>Admin Authentication</h2>
+        <h2>Authentication-Related</h2>
         <p>
-            Since there is now an admin, only admins can create new admin accounts. You can do so through the <code>/admin/create</code>
-            route.
+        Only Admins are capable of creating new admins.
+        <br>
+        <a href="{{url_for('accounts_create')}}">
+            <button>
+              Add a new user
+            </button>
+        </a>
+        <a href="{{url_for('accounts_all')}}">
+            <button>
+              JSON of all users
+            </button>
+        </a>
         </p>
         <h2>API Routes</h2>
         <ul>

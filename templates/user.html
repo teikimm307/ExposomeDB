@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Regular User Dashboard</h1>
+<h1>Welcome, {{user.name | safe}}</h1>
 <article>
-  <p>Logged in as {{user}}</p>
   <a href="{{url_for('batch_query_request')}}">
     <button>
       Batch Search Chemicals
