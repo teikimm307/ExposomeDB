@@ -48,12 +48,12 @@ class ModelForm(BaseModelForm):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
-    name = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, nullable=False)
+    name = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
 
-    institution = db.Column(db.String, unique=True, nullable=False)
-    position = db.Column(db.String, unique=True, nullable=False)
+    institution = db.Column(db.String, nullable=False)
+    position = db.Column(db.String, nullable=False)
 
     admin = db.Column(db.Boolean)
 
