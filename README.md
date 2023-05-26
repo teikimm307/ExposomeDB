@@ -6,13 +6,17 @@ All python code is stored in a single app.py for convenience.
 # Production
 
 1. Get SSH access to your server. Install docker, the only dependency.
-2. `cd` into a directory of your choice (this is where the database will be
+2. `cd` into a directory of your choice (this is where any app-related data will be
    stored as well)
-3. Run the following script (it will also prompt you for the port on which the
-   app should run):
+3. Run the following script (it will also prompt you for the port which the app
+   should expose, the default being 5000):
 ```sh
 curl -sSL https://raw.githubusercontent.com/teikimm307/ExposomeDB/master/setup.sh | sh
 ```
+
+To restart the app, rerun the above script. To kill it, run `docker kill chemicaldb-web`.
+
+You will likely want to enable https through a reverse proxy like nginx.
 
 # Development
 
