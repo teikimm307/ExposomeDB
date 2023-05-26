@@ -11,7 +11,7 @@ All python code is stored in a single app.py for convenience.
 3. Run the following script (it will also prompt you for the port which the app
    should expose, the default being 5000):
 ```sh
-curl -sSL https://raw.githubusercontent.com/teikimm307/ExposomeDB/master/setup.sh | sh
+sh -c "$(curl -sSL https://raw.githubusercontent.com/teikimm307/ExposomeDB/master/setup.sh)"
 ```
 
 To restart the app, rerun the above script. To kill it, run `docker kill chemicaldb-web`.
