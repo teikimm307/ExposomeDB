@@ -9,7 +9,8 @@ _required_fields = [
     ("metabolite_name",     "str"),
     ("formula",             "str"),
     # any field labeled a "float" needs to have a value in decimal notation.
-    ("mass",                "float"),
+    ("monoisotopic_mass",                "float"),
+    ("mode",                "str"),
 
     ("final_mz",            "float"),
     ("final_rt",            "float"),
@@ -30,10 +31,8 @@ _optional_fields = [
 
     ("pubchem_cid",         "int"),  # Only integers are permitted.
     ("pubmed_refcount",     "int"),
-    ("standard_class",      "str"),
     ("inchikey14",          "str"),
 
-    ("adduct",              "str"),
     ("detected_adducts",    "str"),
     ("adduct_calc_mz",      "str"),
     ("msms_purity",         "float"),
@@ -49,6 +48,8 @@ _query_fields = [
 
     ("mz_min",                "float"),
     ("mz_max",                "float"),
+
+    ("mode",                "str"),
 
     #    ("year_max",                "int"),
     #    ("day_max",                 "int"),
@@ -81,7 +82,7 @@ def _validate_type(field: str, value: str, t):
     elif t == "str":
         return value
     else:
-        raise ValueError("Impossible")
+        raise ValueError(f"Impossible field type {t}")
 
 
 def validate_insertion_csv_fields(reader: csv.DictReader) -> tuple[list[dict], str]:

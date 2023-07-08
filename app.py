@@ -115,6 +115,8 @@ class Chemical(db.Model):
     msms_detected = db.Column(db.Boolean, nullable=False)
     msms_purity = db.Column(db.Float)
 
+    mode = db.Column(db.String)
+
     # serialized into datetime.date
     createdAt = db.Column(db.Date)
 
@@ -408,9 +410,12 @@ def batch_query_request():
                                      Chemical.final_mz > query["mz_min"])
                     rt_filter = and_(query["rt_max"] > Chemical.final_rt,
                                      Chemical.final_rt > query["rt_min"])
+                    mode_filter = Chemical.mode == query["mode"]
                     # date_filter = query["date"] >= Chemical.createdAt
                     result = Chemical.query.filter(
-                        and_(mz_filter, rt_filter)
+                        and_(mz_filter, rt_filter, mode_filter)
+                        if len(query["mode"]) != 0
+                        else and_(mz_filter, rt_filter)
                     ).limit(5).all()
                     hits = []
                     for x in result:
