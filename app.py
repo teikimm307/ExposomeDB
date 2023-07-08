@@ -99,11 +99,10 @@ class Chemical(db.Model):
     # important fields
     metabolite_name = db.Column(db.String, nullable=False)
     formula = db.Column(db.String, nullable=False)
-    mass = db.Column(db.Float, nullable=False)
+    monoisotopic_mass = db.Column(db.Float, nullable=False)
 
     pubchem_cid = db.Column(db.Integer)
     pubmed_refcount = db.Column(db.Integer)
-    standard_class = db.Column(db.String)
     inchikey = db.Column(db.String, nullable=False)
     inchikey14 = db.Column(db.String)
 
@@ -111,7 +110,6 @@ class Chemical(db.Model):
     final_rt = db.Column(db.Float, nullable=False)
 
     final_adduct = db.Column(db.String, nullable=False)
-    adduct = db.Column(db.String)
     detected_adducts = db.Column(db.String)
     adduct_calc_mz = db.Column(db.String)
     msms_detected = db.Column(db.Boolean, nullable=False)
@@ -417,7 +415,7 @@ def batch_query_request():
                     hits = []
                     for x in result:
                         hits.append({"url": url_for("chemical_view", id=x.id),
-                                    "name": x.metabolite_name, "mz": x.final_mz, "rt": x.final_rt})
+                                     "name": x.metabolite_name, "mz": x.final_mz, "rt": x.final_rt, "final_adduct": x.final_adduct})
                     data.append(dict(
                         query=query,
                         hits=hits,
