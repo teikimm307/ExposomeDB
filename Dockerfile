@@ -2,6 +2,7 @@ FROM fnndsc/python-poetry
 
 WORKDIR /app/
 
+USER root
 # plz install everything globally in docker
 RUN apt-get update && apt-get install -y build-essential
 RUN poetry config virtualenvs.create false
