@@ -54,42 +54,9 @@
             </li>
             <li><code>/chemical/&lt;chemical id&gt;/{view,update,delete}</code> - CRUD endpoints for chemicals.</li>
         </ul>
-        <h2>Programmatically adding Chemicals</h2>
-        <p>
-            You need admin credentials to access the <code>/chemical/create</code> endpoint, so using an HTTP library
-            like python's requests library is highly recommended for keeping track of session cookies.
-        </p>
-        <pre><code class="language-python">
-import requests
-session = requests.session()
-baseurl = "chemicaldb.teidkim.me"
-session.post(baseurl + "/admin/login", {"username": (username), "password": (password)})
-fields = {
-    "chemical_db_id": &lt;db id from another database&gt;,
-    "library": (library, is a string),
-    "person_name": (name of person who uploaded, string)
-    # name, formula, and mass are required fields!
-    "metabolite_name": (name of the chemical, is a string),
-    "formula": (molecular formula, is a string),
-    "mass": (monoisotopic mass, is a float),
-    "pubchem_cid": &lt;string&gt;,
-    "pubmed_refcount": &lt;integer&gt;
-    "standard_class": &lt;string&gt;
-    "inchikey": &lt;string&gt;,
-    "inchikey14": &lt;string&gt;,
-    # final_mz and final_rt are required fields!
-    "final_mz": (m/z ratio after experiment, is a float),
-    "final_rt": (retention time after experiment, is a float),
-    "final_adduct": &lt;string&gt;,
-    "final_adduct": &lt;string&gt;,
-    "detected_adducts": &lt;string&gt;,
-    "adduct_calc_mz": &lt;string&gt;,
-    "msms_detected": &lt;string if yes, do not include this field otherwise&gt;
-    "msms_purity": &lt;float&gt;
-    "date": "YYYY-MM-DD"
-}
-session.post(baseurl + "/chemical/create", fields)
-        </code></pre>
+        {% if lastcreated %}
+        <p><strong>Database Last updated:</strong> {{lastcreated.createdAt}}</p>
+        {% endif %}
     <h2>Programmatically Searching For Matching Compounds</h2>
     <pre><code class="language-python">
 import requests

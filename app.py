@@ -118,7 +118,8 @@ class Chemical(db.Model):
     mode = db.Column(db.String)
 
     # serialized into datetime.date
-    createdAt = db.Column(db.Date)
+    createdAt = db.Column(db.Date, default=db.func.now(),
+                          onupdate=db.func.now())
 
 
 class ChemicalForm(ModelForm):
@@ -144,7 +145,9 @@ def handler_403(msg):
 def admin_root():
     user = User.query.filter_by(username=session.get('user')).one_or_404()
     if 'admin' in session:
-        return render_template("admin.html", user=user)
+        result = Chemical.query.order_by(
+            Chemical.createdAt.desc()).first()
+        return render_template("admin.html", user=user, lastcreated=result)
     if 'user' in session:
         return render_template("user.html", user=user)
     return User.authorize_or_redirect(admin=False) or ""
@@ -180,7 +183,8 @@ def accounts_create():
 def accounts_edit():
     if login := User.authorize_or_redirect(admin=False):
         return login
-    user = User.query.filter_by(username=session.get('user')).one_or_404()
+    user = User.query.filter_by(
+        username=session.get('user')).limit(1).one_or_404()
     if request.method == "GET":
         return render_template("account_edit.html", user=object_as_dict(user))
     else:
@@ -370,12 +374,25 @@ def batch_add_request():
                 cleanup()
                 return render_template("batchadd.html", invalid=error)
             else:
-                chemicals = [Chemical(**result, person_id=user.id)
-                             for result in results]
-                db.session.add_all(chemicals)
+                chemicals = []
+                overwritten_chemicals = []
+                for result in results:
+                    overwritten = False
+                    if request.form["overwrite"] == "y":
+                        current_chemical = Chemical.query.filter_by(
+                            metabolite_name=result["metabolite_name"],
+                            formula=result["formula"],
+                        ).first()
+                        if current_chemical is not None:
+                            overwritten = True
+                            for k in result:
+                                setattr(current_chemical, k, result[k])
+                            overwritten_chemicals.append(current_chemical)
+                    if not overwritten:
+                        db.session.add(Chemical(**result, person_id=user.id))
                 db.session.commit()
                 cleanup()
-                return render_template("batchadd.html", success=True)
+                return render_template("batchadd.html", success=True, overwritten_chemicals=overwritten_chemicals)
     else:
         return render_template("batchadd.html")
 
