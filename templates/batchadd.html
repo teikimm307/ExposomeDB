@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Batch Upload Chemicals</h2>
+<a
+  href="https://raw.githubusercontent.com/teikimm307/ExposomeDB/master/validate.py">
+  Source Code with required type definitions (shows which fields are optional) </a>
+<br>
+<a href="{{ url_for ('static', filename='upload.txt')}}">Sample TSV file to upload</a>
+<p>Clarification: the mode parameter should be set to one of HILICneg, HILICpos, C18neg, or C18Pos.</p>
+
+<form method="post" enctype="multipart/form-data">
+    <label for="input"> Input file (tab delimited text file) </label>
+    <input type="file" name="input">
+    <label for="overwrite">Overwrite?</label>
+    <input id="overwrite" name="overwrite" type="checkbox" value="y"
+    checked="yes">
+    <br>
+    <input type="submit" value="Submit">
+</form>
+
+{% if invalid %}
+<p style="color: red;">Data Points are Incorrectly added: {{invalid}}</p>
+{% endif %}
+
+{% if success %}
+<p style="color: green;">Success!</p>
+{% endif %}
+
+{% if overwritten_chemicals %}
+<h3>Overwritten Chemicals:</h3>
+<ul>
+{% for chemical in overwritten_chemicals %}
+<li><a href="{{url_for('chemical_view', id=chemical.id)}}">{{chemical.metabolite_name}}</a></li>
+{%endfor%}
+</ul>
+{% endif %}
+
+{% endblock %}

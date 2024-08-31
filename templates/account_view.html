@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>View User</h1>
+    <table>
+      <tr>
+        <td>Id</td>
+        <td>{{user.id}}</td>
+      </tr>
+      <tr>
+        <td>Username</td>
+        <td>{{user.username | safe}}</td>
+      </tr>
+      <tr>
+        <td>Admin</td>
+        <td>{% if user.admin %} Yes {% else %} False {% endif %}</td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td>{{user.name | safe}}</td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>{{user.email | safe}}</td>
+      </tr>
+      <tr>
+        <td>Institution</td>
+        <td>{{user.institution | safe}}</td>
+      </tr>
+      <tr>
+        <td>Position</td>
+        <td>{{user.position | safe}}</td>
+      </tr>
+    </table>
+{% endblock %}

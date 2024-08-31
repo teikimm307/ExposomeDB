@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <h1>Welcome, {{user.name | safe}} (Admin)</h1>
+    <article>
+        <a href="{{url_for('accounts_edit')}}">
+            <button>
+                Edit your profile
+            </button>
+        </a>
+        <a href="{{url_for('chemical_create')}}">
+            <button>
+                Add a Chemical
+            </button>
+        </a>
+        <a href="{{url_for('batch_add_request')}}">
+            <button>
+                Batch Add Chemicals
+            </button>
+        </a>
+        <a href="{{url_for('batch_query_request')}}">
+            <button>
+                Batch Search Chemicals
+            </button>
+        </a>
+        <h2>Authentication-Related</h2>
+        <p>
+        Only Admins are capable of creating new admins.
+        <br>
+        <a href="{{url_for('accounts_create')}}">
+            <button>
+              Add a new user
+            </button>
+        </a>
+        <a href="{{url_for('accounts_all')}}">
+            <button>
+              JSON of all users
+            </button>
+        </a>
+        </p>
+        <h2>API Routes</h2>
+        <ul>
+            <li><code>/chemical/all</code> - returns all chemicals in the database as JSON</li>
+            <li><code>/chemical/search</code> - returns JSON for search queries. This endpoint takes GET parameters as follows:
+                <ul>
+                    <li>mz_min: Minimum M/Z Ratio</li>
+                    <li>mz_max: Maximum M/Z Ratio</li>
+                    <li>rt_min: Minimum Retention Time</li>
+                    <li>rt_max: Maximum Retention Time</li>
+                </ul>
+            </li>
+            <li><code>/chemical/&lt;chemical id&gt;/{view,update,delete}</code> - CRUD endpoints for chemicals.</li>
+        </ul>
+        {% if lastcreated %}
+        <p><strong>Database Last updated:</strong> {{lastcreated.createdAt}}</p>
+        {% endif %}
+    <h2>Programmatically Searching For Matching Compounds</h2>
+    <pre><code class="language-python">
+import requests
+baseurl = "chemicaldb.teidkim.me"
+# initialize parameters
+
+def generate_parameters(mz, mz_range_ppm, rt, rt_range):
+    return dict(
+      mz_min=(mz - mz_range_ppm/10**6),
+      mz_max=(mz + mz_range_ppm/10**6),
+      rt_min=(rt - rt_range),
+      rt_max=(rt + rt_range)
+    )
+
+mz = &lt; theoretical mz ratio &gt;
+mz_range_ppm = &lt;threshold the mz value should be in ppm units&gt;
+rt = &lt; theoretical retention time &gt;
+rt_range = &lt; seconds in which the rt needs to be in &gt;
+
+# make a request to the endpoint.
+response = requests.get(baseurl + "/chemical/search", params=generate_parameters(mz, mz_range_ppm, rt, rt_range))
+# make sure to include some error handling code.
+results = response.json()
+
+# results is a json containing a list of chemicals with the same schema as above.
+# There are up to 10 search results per query, so you should write some code to
+# determine which result is best.
+    </code></pre>
+
+    </article>
+{% endblock %}

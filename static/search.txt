@@ -1,0 +1,4 @@
+rt_min	rt_max	mz_min	mz_max	mode
+0	500	0	500	C18neg
+200	250	200	300	C18Pos
+100	400	100	200	HILICneg

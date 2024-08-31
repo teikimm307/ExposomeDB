@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Batch Query Chemicals</h2>
+<a href="https://git.junickim.me/junikimm717/walker-database/raw/master/validate.py"> Source Code with required type definitions </a>
+<br>
+<a href="{{ url_for ('static', filename='search.txt')}}">Sample TSV file to upload</a>
+<p>Clarification: the &quot;mode&quot; parameter is required because it
+specifies what mode the samples were run in so that the data can be filtered by
+the mode  (Hilic or C18, negative or positive)</p>
+
+<form method="post" enctype="multipart/form-data">
+    <label for="input">Input (tab-delimited text file): </label>
+    <input type="file" name="input">
+    <input type="submit" value="Submit">
+</form>
+
+{% if invalid %}
+<p style="color: red;">Data Points are Incorrectly added: {{invalid}}</p>
+{% endif %}
+
+{% if success %}
+<p style="color: green;">Success!</p>
+{% for result in data %}
+<hr>
+<h2>Query {{loop.index}}</h2>
+<p>
+{{result.query.mz_min}} &lt; M/Z Ratio &lt; {{result.query.mz_max}},
+{{result.query.rt_min}} &lt; Retention Time &lt; {{result.query.rt_max}},
+Mode = {{result.query.mode}}
+</p>
+{% for hit in result.hits %}
+    <div>
+        <a href="{{hit.url}}">
+            <h3>{{hit.name}}</h3>
+        </a>
+        <table>
+            <tr>
+                <td>Retention Time</td>
+                <td>{{hit.rt}}</td>
+            </tr>
+            <tr>
+                <td>M/Z Ratio</td>
+                <td>{{hit.mz}}</td>
+            </tr>
+            <tr>
+                <td>Final Adduct</td>
+                <td>{{hit.final_adduct}}</td>
+            </tr>
+        </table>
+    </div>
+{% endfor %}
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

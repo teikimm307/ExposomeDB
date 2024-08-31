@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Add New User</h1>
+    <script defer>
+    window.onload = () => {
+        const uname_el = document.getElementById("username")
+        const pw_el = document.getElementById("password")
+        const rec_el = document.getElementById("reconfirm")
+        function check_equal() {
+            const uname = uname_el.value
+            const pw = pw_el.value
+            const rec = rec_el.value
+            if (pw.length > 0 && rec === pw && uname.length > 0) {
+                console.log("happens!")
+                document.getElementById("matches").innerHTML = `<div style='color:darkgreen'>Matches!</div>`
+                document.getElementById("submit").disabled = false
+            } else {
+                document.getElementById("matches").innerHTML = `<div style='color:darkred'>Does not Match!</div>`
+                document.getElementById("submit").disabled = true
+            }
+        }
+        uname_el.addEventListener("input", check_equal)
+        pw_el.addEventListener("input", check_equal)
+        rec_el.addEventListener("input", check_equal)
+    }
+    </script>
+    <form method="post">
+        <label for="username">Username:</label>
+        <input id="username" name="username" type="text" required="required">
+        <br>
+
+        <label for="name">Name:</label>
+        <input id="name" name="name" type="text" required="required">
+        <br>
+
+        <label for="email">Email:</label>
+        <input id="email" name="email" type="text" required="required">
+        <br>
+
+        <label for="institution">Institution:</label>
+        <input id="institution" name="institution" type="text" required="required">
+        <br>
+
+        <label for="position">Position:</label>
+        <input id="position" name="position" type="text" required="required">
+        <br>
+
+        <label for="admin">Admin:</label>
+        <input id="admin" name="admin" type="checkbox" value="y">
+        <br>
+
+        <label for="password">Password:</label>
+        <input id="password" name="password" type="password" required="required">
+        <br>
+        <label for="reconfirm">Reconfirm Password: <span id="matches"></span></label>
+        <input id="reconfirm" name="reconfirm" type="password" required="required">
+        <br>
+        <input type="submit" value="Submit" disabled="disabled" id="submit">
+    </form>
+        {% if success %}
+            <p style="color:darkgreen">Login Successful!</p>
+        {% elif fail %}
+            <p style="color:darkred">Login Failed. Please try again. {{fail}}</p>
+        {% endif %}
+{% endblock %}

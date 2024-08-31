@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Edit Account Profile</h1>
+    <table>
+      <tr>
+        <td>Id</td>
+        <td>{{user.id}}</td>
+      </tr>
+      <tr>
+        <td>Username</td>
+        <td>{{user.username}}</td>
+      </tr>
+      <tr>
+        <td>Admin</td>
+        <td>{% if user.admin %} Yes {% else %} False {% endif %}</td>
+      </tr>
+    </table>
+    <form method="post">
+
+        <label for="name">Name:</label>
+        <input id="name" name="name" type="text" required="required"
+        value="{{user.name | safe}}">
+        <br>
+
+        <label for="email">Email:</label>
+        <input id="email" name="email" type="text" required="required"
+                   value="{{user.email | safe}}">
+        <br>
+
+        <label for="institution">Institution:</label>
+        <input id="institution" name="institution" type="text"
+                                                   required="required"
+                                                   value="{{user.institution |
+                                                   safe}}">
+        <br>
+
+        <label for="position">Position:</label>
+        <input id="position" name="position" type="text" required="required"
+                                                         value="{{user.position
+                                                         | safe}}">
+        <br>
+
+        <br>
+        <input type="submit" value="Submit" id="submit">
+    </form>
+        {% if success %}
+            <p style="color:darkgreen">Edits Successful!</p>
+        {% elif fail %}
+            <p style="color:darkred">Edits Failed. Please try again. {{fail}}</p>
+        {% endif %}
+{% endblock %}

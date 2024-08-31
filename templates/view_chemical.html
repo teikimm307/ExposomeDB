@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Viewing Chemical {{id}}</h2>
+{% if session.admin %}
+<div>
+<a href="{{ url_for('chemical_update', id=id) }}">
+    <button>Edit Chemical</button>
+</a>
+<a href="{{ url_for('chemical_delete', id=id) }}">
+    <button style="background-color: red;">Delete Chemical</button>
+</a>
+</div>
+{% endif %}
+<table>
+    {% for k,v in chemical.items() %}
+    <tr>
+      {% if k == "person_id" %}
+        <td>
+            <strong>{{k}}</strong>
+        </td>
+        <td>
+          <a href="{{url_for('accounts_view', id=v)}}">User ID {{v}}</a>
+        </td>
+      {% else %}
+        <td>
+            <strong>{{k}}</strong>
+        </td>
+        <td>
+            {% if v is not none %}
+            {{ v }}
+            {% endif %}
+        </td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

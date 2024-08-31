@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Login</h1>
+    <form method="post">
+        <label for="username">Username:</label>
+        <input id="username" name="username" type="text" required="required">
+        <br>
+        <label for="password">Password:</label>
+        <input id="password" name="password" type="password" required="required">
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+        {% if success %}
+            <p style="color:darkgreen">Login Successful!</p>
+        {% elif fail %}
+            <p style="color:darkred">Login Failed. Please try again.</p>
+        {% endif %}
+{% endblock %}

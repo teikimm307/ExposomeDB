@@ -1,0 +1,5 @@
+metabolite_name	formula	monoisotopic_mass	final_mz	final_rt	final_adduct	standard_grp	msms_detected	inchikey	chemical_db_id	library	pubchem_cid	pubmed_refcount	standard_class	inchikey14	adduct	detected_adducts	adduct_calc_mz	msms_purity	mode
+Folic Acid	C11H15N2O8P	441.1397	442.1470	36.8	M+H	Endogenous	Yes	OVBPIULPVIDEAO-LBPRGKRZSA-N	HRELC_00003	IROA_MSMLS_Library_Plate01	135398658	17654	Endogenous_metabolite	OVBPIULPVIDEAO	M+H	M+H	NA	0.968	HILICneg
+Folic Acid	C11H15N2O8P	441.1397	442.1470	36.8	M+H	Endogenous	Yes	OVBPIULPVIDEAO-LBPRGKRZSA-N	HRELC_00003	IROA_MSMLS_Library_Plate01	135398658	17654	Endogenous_metabolite	OVBPIULPVIDEAO	M+H	M+H	NA	0.968	HILICpos
+Omethoate	C5H12NO4PS	213.022466	214.029776	32.74	M+H	Endogenous	Yes	PZXOQEXFMJCDPG-UHFFFAOYSA-N	HRELC_00835	Restek_Mix1	14210	98	Pesticides	PZXOQEXFMJCDPG	M+H	M+H	214.0297	0.968	C18neg
+Omethoate	C5H12NO4PS	213.022466	214.029776	32.74	M+H	Endogenous	Yes	PZXOQEXFMJCDPG-UHFFFAOYSA-N	HRELC_00835	Restek_Mix1	14210	98	Pesticides	PZXOQEXFMJCDPG	M+H	M+H	214.0297	0.968	C18pos

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Welcome, {{user.name | safe}}</h1>
+<article>
+  <a href="{{url_for('batch_query_request')}}">
+    <button>
+      Batch Search Chemicals
+    </button>
+  </a>
+  <a href="{{url_for('accounts_edit')}}">
+    <button>
+      Edit your profile
+    </button>
+  </a>
+</article>
+{% endblock %}

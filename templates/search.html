@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
+    <script type="module">
+        //import { createApp } from 'https://unpkg.com/petite-vue?module'
+        //import { createApp } from 'https://unpkg.com/vue@2.7.14/dist/vue.esm-browser.prod.js'
+
+        function valid(str) {
+            return !isNaN(str) && !isNaN(parseFloat(str))
+        }
+
+        function debounce(func, timeout = 300){
+          let timer;
+          return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+          };
+        }
+
+
+        const app = new Vue({
+            el: "#search",
+            data() {
+                return {
+                    mz_min: 0,
+                    mz_max: 0,
+                    rt_min: 0,
+                    rt_max: 0,
+                    // query parameters for the maximum date possible.
+                    year_max: 2021,
+                    month_max: 1,
+                    day_max: 31,
+                    // results
+                    results: [],
+                    error: null,
+                }
+            },
+            methods: {
+                // methods
+                prepare_query() {
+                  // validation
+                  let query = {}
+                  const fields = ["mz_min", "mz_max", "rt_min", "rt_max",
+                  "year_max", "month_max", "day_max"]
+                  for (let i = 0; i < fields.length; i++) {
+                    const field = fields[i];
+                    if (!valid(this[field])) {
+                      console.log(query, field, this[field])
+                      return null;
+                    } else {
+                      query[field] = this[field]
+                    }
+                  }
+                  return query
+                },
+                async fetch_data() {
+                    const query = this.prepare_query()
+                    if (query === null) return;
+                    const api = `/chemical/search`;
+                    fetch(api, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(query)
+                    }).then(async res => {
+                        if (res.status !== 200) {
+                            console.log(`Error Status, ${res.status}`)
+                            const json = await res.json()
+                            throw Error(json.error);
+                        }
+                        return res.json()
+                    }).then(json => {
+                        this.results = json;
+                        this.error = null;
+                    }).catch(e => {
+                        this.error = e.message;
+                    })
+                }
+            },
+            created() {
+                this.fetch_data = debounce(this.fetch_data, 300)
+            }
+
+        });
+    </script>
+
+    <h1>Search Box</h1>
+    <div id="search">
+    <main>
+        <table>
+            <tr>
+                <td>
+                    <label for="mz_min">Minimum M/Z Ratio</label>
+                </td>
+                <td>
+                    <input id="mz_min" type="number" name="mz_min" v-model="mz_min" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Maximum M/Z Ratio</label>
+                </td>
+                <td>
+                    <input id="mz_max" type="number" name="mz_max" v-model="mz_max" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Minimum Retention Time</label>
+                </td>
+                <td>
+                    <input id="rt_min" type="number" name="rt_min" v-model="rt_min" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Maximum Retention Time</label>
+                </td>
+                <td>
+                    <input id="rt_max" type="number" name="rt_max" v-model="rt_max" value="0">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="mz_min">Maximum Date</label>
+                </td>
+                <td>
+                    <input id="year_max" type="number" name="year_max"
+                    v-model="year_max" placeholder="year">
+                    <input id="month_max" type="number" name="month_max"
+                    v-model="month_max" placeholder="month">
+                    <input id="day_max" type="number" name="day_max"
+                    v-model="day_max" placeholder="day">
+                </td>
+            </tr>
+        </table>
+
+        <br>
+        <button @click="fetch_data()">Search</button>
+    </main>
+    <hr>
+    {% raw %}
+    <div id="search">
+        <div v-if="error !== null" style="color: red;">
+          Uh Oh! There is an Error! {{error}}
+        </div>
+        <div v-for="result in results">
+            <a :href="result.url">
+                <h3>{{result.name}}</h3>
+            </a>
+            <table>
+                <tr>
+                    <td>Retention Time</td>
+                    <td>{{result.rt}}</td>
+                </tr>
+                <tr>
+                    <td>M/Z Ratio</td>
+                    <td>{{result.mz}}</td>
+                </tr>
+            </table>
+            <hr>
+        </div>
+    </div>
+    {% endraw %}
+    </div>
+
+{% endblock %}
